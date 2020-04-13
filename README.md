@@ -1,1 +1,4 @@
 # ChineseCheckers
+Game description:
+
+Functions:
