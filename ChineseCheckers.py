@@ -60,15 +60,14 @@ class ChineseCheckers:
         #used to check for the win condition
         self.home = {}
         
-        #Default set up (see below)
-        self.set_up()
+    
         #Six cardinal directions:
         #useful for adding to tile to get adjacent tiles.
         self.directions = [Tile(1,0,-1),Tile(0,1,-1),Tile(-1,0,1),Tile(0,-1,1),Tile(1,-1,0),Tile(-1,1,0)]
         
         
     def set_up(self, gamemode = 2):
-        
+        self.reset()
         #Different setups (gamemode is number of players/colors, default 2):
         if gamemode == 2:
             self.pieces['red'] = []
@@ -159,7 +158,7 @@ class ChineseCheckers:
     #Moving pieces:
     #first tests if move is legal (see below)
     def move(self, loc, dest):
-        if self.is_legal(loc, dest):
+        if self.in_bounds(dest):
             for color in self.pieces:
                 for i in range(len(self.pieces[color])):
                     if self.pieces[color][i] == loc:
@@ -190,20 +189,17 @@ class ChineseCheckers:
         if self.is_occupied(loc):
             if self.is_empty(dest) and self.in_bounds(dest):
                 if loc.distance(dest)==1:
-                    return True
+                    return True, 'step'
                 elif dest in self.connection(loc)-set([loc]):
-                    return True
+                    return True, 'jump'
                 
                 else:
-                    print('No Path Found')
-                    return False
+                    return False, 'no path found'
             else:
-                print('Destination Occupied or Out of Bound')
-                return False
+                return False, 'destination occupied or out of bound'
                 
         else:
-            print('No Piece to move')
-            return False
+            return False, 'no piece to move'
     
     #Win condition:
     #if all pieces are more than distance 12 from start, they must be in the opposite triangle, assuming they are in bounds.
@@ -213,6 +209,7 @@ class ChineseCheckers:
 
 
 #Example
+'''
 C = ChineseCheckers()
 print(C.pieces['red'])
 print(C.connection(C.pieces['red'][4]))
@@ -222,7 +219,7 @@ C.move(Tile(3, 3, -6),Tile(3, 1, -4))
 print(C.pieces['red'][4])
 print(C.has_won('red'))
 print(C.pieces['red'][4].distance(C.home['red']))
-
+'''
 
 
 
