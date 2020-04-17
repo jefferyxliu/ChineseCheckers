@@ -41,7 +41,7 @@ class App(Frame):
         self.root.destroy()
         sys.exit()
 
-    def get_username(self, x = None):
+    def get_username(self, event = None):
         get = self.user_entry.get()
         if len(get) > 0:
             self.username = get.lstrip('\\')
@@ -60,6 +60,9 @@ class App(Frame):
     def create_widgets(self):
         self.board = Canvas(width=600, height=600, bg = 'Gray')
         self.board.pack(side = LEFT)
+        self.board.bind('<Button-1>', self.click)
+        #self.board.bind('<B1-Motion>', self.drag)
+        self.board.bind('<ButtonRelease-1>', self.release)
         self.pieces = []
         self.spaces = []
         for a in range(-8,9):
@@ -69,11 +72,6 @@ class App(Frame):
                     y = 20*1.73*(a+b)
                     item = self.board.create_oval((300+(x-5),300-(y+5),300+(x+5),300-(y-5)), fill = 'black')
                     self.spaces.append(item)
-                    
-        
-
-
-        
 
         self.chatframe = Frame(width=40, height=400)
         self.chatframe.pack(side = RIGHT)
@@ -94,15 +92,37 @@ class App(Frame):
         self.user_label = Label(self.chatframe, text=f'{self.username}:')
         self.user_label.pack(side=RIGHT)
 
-    def callback(self, x = None):
+    def callback(self, event=None):
         get = self.entry.get()
         self.entry.delete(0,END)
         #self.print_log(self.username, get)
         if len(get) > 0:
             #Send text to server.
             self.client_socket.send(headerencode(get))
-        
 
+    def click(self, event):
+        if event.widget == self.board:
+            x = self.board.canvasx(event.x)-300
+            y = 300-self.board.canvasy(event.y)
+            a = -round(x/40 + y/40/1.73)
+            b = -round(-x/40 + y/40/1.73)
+            self.loadmove = (a, b)
+    
+    def drag(self, event): #implement dragging pieces?
+        pass
+
+    def release(self, event):
+        if event.widget == self.board:
+            x = self.board.canvasx(event.x)-300
+            y = 300-self.board.canvasy(event.y)
+            a = -round(x/40 + y/40/1.73)
+            b = -round(-x/40 + y/40/1.73)
+            c = self.loadmove[0]
+            d = self.loadmove[1]
+            if (a, b) != (c, d):
+                self.client_socket.send(headerencode('\\move {},{},{} {},{},{}'.format(c,d,-c-d,a,b,-a-b)))
+        
+    
     def print_log(self, user, text):
         self.log.config(state=NORMAL)
         if user == 'Chatbot':
@@ -110,8 +130,6 @@ class App(Frame):
         else:
             self.log.insert(END, f'{user}: {text}\n')
         self.log.config(state=DISABLED)
-
-        
 
     def print_board(self, pieces_position):
         for item in self.pieces:
@@ -127,7 +145,8 @@ class App(Frame):
     def headerdecode(self, header = HEADER_LENGTH):
         username_header = self.client_socket.recv(header)
         if not len(username_header):
-            print('connection closed by the server')
+            print('Connection closed by the server.')
+            self.print_log('Chatbot','Connection closed by the server.')
             sys.exit()
         username_length = int(username_header.decode('utf-8').strip())
         username = self.client_socket.recv(username_length).decode('utf-8')
@@ -135,11 +154,11 @@ class App(Frame):
         message_length = int(message_header.decode('utf-8').strip())
         if username == '\\board':
             a = self.client_socket.recv(message_length)
-            print(a)
+            #print(a)
             message = pickle.loads(a)
         else:
             message = self.client_socket.recv(message_length).decode('utf-8')
-        print(message)
+        #print(message)
         return username, message
         
     def start(self):

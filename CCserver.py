@@ -78,11 +78,10 @@ class Server(CC.ChineseCheckers):
                     
                     if message is False:
                         print('Closed connection from {}'.format(self.clients[notified_socket]['data'].decode('utf-8')))
-                        self.send_all(headerencode('Chatbot'))
-                        self.send_all(headerencode('{} left.'.format(self.clients[notified_socket]['data'].decode('utf-8'))))
-                        
                         self.sockets_list.remove(notified_socket)
                         del self.clients[notified_socket]
+                        self.send_all(headerencode('Chatbot'))
+                        self.send_all(headerencode('{} left.'.format(self.clients[notified_socket]['data'].decode('utf-8'))))
                         continue
                 
                     user = self.clients[notified_socket]
@@ -114,7 +113,7 @@ class Server(CC.ChineseCheckers):
                             self.send_all(user['header'] + user['data'])
                             self.send_all(headerencode('reset the board.'))
                             self.send_all(headerencode('\\board'))
-                            self.send_all(headerencode({}),'pickle')
+                            self.send_all(headerencode({},'pickle'))
 
                         elif msg[0] == '\\is_legal':
                             try:
@@ -143,8 +142,9 @@ class Server(CC.ChineseCheckers):
                                 loc = CC.Tile(*[int(x) for x in loc])
                                 dest = msg[2].split(',')
                                 dest = CC.Tile(*[int(x) for x in dest])
-                                
-                                if self.is_legal(loc,dest)[0]:
+
+                                test = self.is_legal(loc,dest)
+                                if test[0]:
                                     self.move(loc, dest)
                                     self.send_all(user['header'] + user['data'])
                                     self.send_all(headerencode('moved from {} to {}'.format(loc,dest)))
@@ -157,9 +157,9 @@ class Server(CC.ChineseCheckers):
                                             self.send_all(headerencode('Chatbot'))
                                             self.send_all(headerencode('{} has won!'.format(color)))
                                             
-
-                                            
-                                    #UPDATE BOARD and SEND!
+                                elif not test[0]:
+                                    notified_socket.send(headerencode('Chatbot'))
+                                    notified_socket.send(headerencode(f'Illegal move, {test[1]}.'))
 
                             except:
                                 notified_socket.send(headerencode('Chatbot'))
