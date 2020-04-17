@@ -2,13 +2,18 @@ import ChineseCheckers as CC
 import socket
 import select
 import sys
+import pickle
+
 
 HEADER_LENGTH = 10
 IP = '127.0.0.1'
 PORT = 1234
 
-def headerencode(text):
-    message = text.encode('utf-8')
+def headerencode(text, mode = 'utf-8'):
+    if mode == 'utf-8':
+        message = text.encode('utf-8')
+    elif mode == 'pickle':
+        message = pickle.dumps(text)
     header = f'{len(message):<{HEADER_LENGTH}}'.encode('utf-8')
     return header + message
 
@@ -63,6 +68,10 @@ class Server(CC.ChineseCheckers):
 
                     self.send_all(headerencode('Chatbot'))
                     self.send_all(headerencode('{} joined.'.format(user['data'].decode('utf-8'))))
+                    if self.playing:
+                        client_socket.send(headerencode('\\board'))
+                        client_socket.send(headerencode(self.to_plane(self.home['red']),'pickle'))
+                        print('board sent.')
                     
                 else:
                     message = self.receive_message(notified_socket)
@@ -93,7 +102,9 @@ class Server(CC.ChineseCheckers):
                                     self.set_up(int(msg[1]))
                                     self.send_all(user['header'] + user['data'])
                                     self.send_all(headerencode('started game for {} players.'.format(msg[1])))
-                                
+                                    self.send_all(headerencode('\\board'))
+                                    self.send_all(headerencode(self.to_plane(self.home['red']),'pickle'))
+                                    print('board sent.')
                             except:
                                 notified_socket.send(headerencode('Chatbot'))
                                 notified_socket.send(headerencode('Set up failed!'))
@@ -102,6 +113,8 @@ class Server(CC.ChineseCheckers):
                             self.reset()
                             self.send_all(user['header'] + user['data'])
                             self.send_all(headerencode('reset the board.'))
+                            self.send_all(headerencode('\\board'))
+                            self.send_all(headerencode({}),'pickle')
 
                         elif msg[0] == '\\is_legal':
                             try:
@@ -135,6 +148,9 @@ class Server(CC.ChineseCheckers):
                                     self.move(loc, dest)
                                     self.send_all(user['header'] + user['data'])
                                     self.send_all(headerencode('moved from {} to {}'.format(loc,dest)))
+                                    self.send_all(headerencode('\\board'))
+                                    self.send_all(headerencode(self.to_plane(self.home['red']),'pickle'))
+                                    print('board sent.')
 
                                     for color in self.pieces:
                                         if self.has_won(color):

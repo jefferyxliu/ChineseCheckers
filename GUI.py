@@ -3,6 +3,7 @@ import socket
 import sys
 import errno
 import threading
+import pickle
 
 HEADER_LENGTH = 10
 IP = '127.0.0.1'
@@ -18,6 +19,8 @@ def headerencode(text):
 class App(Frame):
 
     def __init__(self):
+        
+        
         self.root = Tk(className=' Chinese Checkers')
         self.root.protocol("WM_DELETE_WINDOW", self.exit)
         self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -41,13 +44,13 @@ class App(Frame):
     def get_username(self, x = None):
         get = self.user_entry.get()
         if len(get) > 0:
-            self.username = get
+            self.username = get.lstrip('\\')
         else:
             self.username = 'username'
         self.user_entry.destroy()
         self.user_entry_label.destroy()
 
-        #TO DO: Send username to server
+        #Send username to server
         self.client_socket.send(headerencode(self.username))
 
         
@@ -55,9 +58,22 @@ class App(Frame):
         self.start()
 
     def create_widgets(self):
-        self.board = Canvas(width=400, height=400, bg = 'Gray')
+        self.board = Canvas(width=600, height=600, bg = 'Gray')
         self.board.pack(side = LEFT)
-        self.board.create_text(200,200,text='Board goes here.')
+        self.pieces = []
+        self.spaces = []
+        for a in range(-8,9):
+            for b in range(-8,9):
+                if (a <= 4 and b <= 4 and -a-b<=4) or (a >= -4 and b >= -4 and -a-b >= -4):
+                    x = 20*(a-b)
+                    y = 20*1.73*(a+b)
+                    item = self.board.create_oval((300+(x-5),300-(y+5),300+(x+5),300-(y-5)), fill = 'black')
+                    self.spaces.append(item)
+                    
+        
+
+
+        
 
         self.chatframe = Frame(width=40, height=400)
         self.chatframe.pack(side = RIGHT)
@@ -83,7 +99,7 @@ class App(Frame):
         self.entry.delete(0,END)
         #self.print_log(self.username, get)
         if len(get) > 0:
-            #TO DO: Send text to server.
+            #Send text to server.
             self.client_socket.send(headerencode(get))
         
 
@@ -94,28 +110,19 @@ class App(Frame):
         else:
             self.log.insert(END, f'{user}: {text}\n')
         self.log.config(state=DISABLED)
-        
-        
-    
-    def submit_move(self, move):
-        
-        #Update Board Position
-        '''
-        loc = move[0].split(',')
-        dest = move[1].split(',')
-        loc = [int(x) for x in loc]
-        dest = [int(x) for x in dest]
-        print(loc,dest)
-        '''
-        pass
+
         
 
-    
-        
-
-    def print_board(self, position):
-        #Draw the board position
-        pass
+    def print_board(self, pieces_position):
+        for item in self.pieces:
+            self.board.delete(item)
+        for color in pieces_position:
+            for piece in pieces_position[color]:
+                x, y = piece
+                x = 20*x
+                y = 20*1.73*y
+                item = self.board.create_oval((300+(x-10),300-(y+10),300+(x+10),300-(y-10)), fill = color)
+                self.pieces.append(item)    
     
     def headerdecode(self, header = HEADER_LENGTH):
         username_header = self.client_socket.recv(header)
@@ -126,7 +133,12 @@ class App(Frame):
         username = self.client_socket.recv(username_length).decode('utf-8')
         message_header = self.client_socket.recv(header)
         message_length = int(message_header.decode('utf-8').strip())
-        message = self.client_socket.recv(message_length).decode('utf-8')
+        if username == '\\board':
+            a = self.client_socket.recv(message_length)
+            print(a)
+            message = pickle.loads(a)
+        else:
+            message = self.client_socket.recv(message_length).decode('utf-8')
         print(message)
         return username, message
         
@@ -140,10 +152,12 @@ class App(Frame):
             
             try:
                 username, message = self.headerdecode()
-                
-
-                if len(message) > 0:
-                    self.print_log(username, message)
+                if username == '\\board':
+                    self.print_board(message)
+                    
+                else:
+                    if len(message) > 0:
+                        self.print_log(username, message)
                 
                 
             except IOError as e:

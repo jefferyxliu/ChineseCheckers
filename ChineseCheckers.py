@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # coding: utf-8
-
+import turtle
 class Tile:
     def __init__(self, x, y, z):
         #Hexagonal Coordinate System. Uses lattice points (x,y,z) confined to the plane x+y+z = 0
@@ -23,6 +23,9 @@ class Tile:
     
     def __repr__(self):
         return str(self)
+
+    def triple(self):
+        return self.x, self.y, self.z
     
     #Hash:
     def __hash__(self):
@@ -51,6 +54,15 @@ class Tile:
     def distance(self, other): 
         return (abs(self.x - other.x) + abs(self.y - other.y) + abs(self.z-other.z))//2
 
+    #Returns the coordinates of the hexagonal coordinate system mapped to a 2D plane.
+    def rect(self, index = 2, sgn = -1):
+         
+        x = sgn*(self.x, self.y, self.z)[(index+1)%3]
+        y = sgn*(self.y, self.z, self.x)[(index+1)%3]
+        
+        return (x-y, x+y) #second coordinate should be multiplied by sqrt 3 when drawn to preserve lengths.
+
+    
 class ChineseCheckers:
     def __init__(self):
         #Pieces and location stored in dict in the form {color: [tile1,tile2,tile3,...,tile10]}
@@ -64,6 +76,8 @@ class ChineseCheckers:
         #Six cardinal directions:
         #useful for adding to tile to get adjacent tiles.
         self.directions = [Tile(1,0,-1),Tile(0,1,-1),Tile(-1,0,1),Tile(0,-1,1),Tile(1,-1,0),Tile(-1,1,0)]
+        self.playing = False
+        self.drawn = False
         
         
     def set_up(self, gamemode = 2):
@@ -129,9 +143,10 @@ class ChineseCheckers:
             self.home['yellow'] = Tile(-4,8,-4)
             self.home['cyan'] = Tile(-8,4,4)
             self.home['magenta'] = Tile(8,-4,-4)
-        
+        self.playing = True
                     
     def reset(self):
+        self.playing = False
         self.pieces = {}
         self.home = {}
      
@@ -205,6 +220,45 @@ class ChineseCheckers:
     #if all pieces are more than distance 12 from start, they must be in the opposite triangle, assuming they are in bounds.
     def has_won(self, color):
         return all([piece.distance(self.home[color]) > 12 for piece in self.pieces[color]])
+
+    #Returns a dictionary of pieces with in rectangular coordinates remember multiply second coordinate by sqrt(3) to preserve length.
+    #Send this to client after a move. Client draw on Tkinter canvas.
+    def to_plane(self, home):
+        for i in range(3):
+            if abs(home.triple()[i]) == 8:
+                index = i
+                sgn = home.triple()[i]//8
+
+        self.plane = {}
+        for color in self.pieces:
+            self.plane[color] = [tile.rect(index, sgn) for tile in self.pieces[color]]
+        return self.plane
+
+    #Test drawing with turtle graphics.
+    def draw(self, home):
+        if not self.drawn:
+            self.turtle = turtle.Turtle()
+            self.turtle.speed(10)
+            self.turtle.hideturtle()
+            self.drawn = True
+        pieces = self.to_plane(home)
+        self.turtle.clear()
+        for color in pieces:
+            for x in pieces[color]:
+                self.turtle.penup()
+                self.turtle.goto(20*x[0], 20*1.73*x[1])
+                self.turtle.pendown()
+                self.turtle.dot(25,color)
+                
+            
+            
+        
+        
+
+
+
+
+
 
 
 
