@@ -2,7 +2,6 @@
 const socket = io(`http://localhost:3000`)
 
 const name = prompt('Enter username: ')
-console.log(`${name} joined.`)
 socket.emit('new-user', name)
 
 //receiving new connection message
@@ -32,6 +31,11 @@ socket.on('user-disconnected', name => {
 //sending a game command
 //TO DO: get command from HTML text form (commands with special character "/")
 //send command as object {function: function, parameters: parameters}
+//list of commands implemented:
+//{function: 'set_up', parameters: [gamemode, [colors0-5](optional colors)]}
+//{function: 'reset', parameters: null}
+//{function: 'is_legal', parameters: [[x1,y1,z1],[x2,y2,z2]]}
+//{function: 'move', parameters: [[x1,y1,z1],[x2,y2,z2]]}
 function send_command(command) {
     socket.emit('send-command', command)
 }

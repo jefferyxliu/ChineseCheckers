@@ -1,4 +1,4 @@
-class Tile {
+export class Tile {
     constructor(x, y, z) {
         //hexagonal coordinate system
         //lattice points of plane x + y + z = 0
@@ -46,7 +46,7 @@ class Tile {
     }
 }
 
-class TileSet {
+export class TileSet {
     constructor(tiles = null) {
         if (tiles === null) {
             tiles = []
@@ -83,17 +83,13 @@ class TileSet {
         return this.map.has(tile.toString)
     }
 }
-//for (let index = 0; index < 6; index++) {
-//    console.log(tile.toRect(index));
-//}
 
-class ChineseCheckers {
+export default class ChineseCheckers {
     constructor() {
-        //Map of all pieces and tile locations, color as key
+        //Map of all pieces and tile locations, index 0-5 as key
         this.pieces = new Map()
-        //Map of home side index 0-5
-        //used to check win condition
-        this.home = new Map()
+        //Map of index 0-5 to color
+        this.color = new Map()
 
         //six cardinal directions
         //for getting adjacent tiles
@@ -119,8 +115,8 @@ class ChineseCheckers {
                     piecearray.push(new Tile(x, y, -x-y));
                 }
             }
-            this.pieces.set(color, piecearray);
-            this.home.set(color, index);
+            this.pieces.set(index, piecearray);
+            this.color.set(index, color);
         this.isPlaying = true;
         }
     }
@@ -144,8 +140,8 @@ class ChineseCheckers {
     }
     occupied_tiles() {
         let occupied = [];
-        for (const colorpieces of [...this.pieces.values()]) {
-            occupied.push(...colorpieces)
+        for (const sidepieces of [...this.pieces.values()]) {
+            occupied.push(...sidepieces)
         }
         return occupied;
     }
@@ -156,10 +152,10 @@ class ChineseCheckers {
         return !(this.is_occupied(tile));
     }
     move(loc, dest) {
-        for (const color in this.pieces) {
-            for (let i = 0; i < this.pieces[color].length; i++) {
-                if (loc.equals(this.pieces[color][i])) {
-                    this.pieces[color][i] = dest
+        for (const side in this.pieces) {
+            for (let i = 0; i < this.pieces[side].length; i++) {
+                if (loc.equals(this.pieces[side][i])) {
+                    this.pieces[side][i] = dest
                 }
             }
         }
@@ -200,22 +196,22 @@ class ChineseCheckers {
                     }
                 }
             } else {
-                return [false, 'destination occupied or out of bound']
+                return [false, 'destination occupied or out of bounds']
             }
         } else {
             return [false, 'no piece to move']
         }
     }
     //win condition
-    has_won(color) {
-        home = this.home_tile(this.home.get(color))
-        return this.pieces.get(color).every(piece => piece.distance(home) > 12)
+    has_won(side) {
+        const home = this.home_tile(side)
+        return this.pieces.get(side).every(piece => piece.distance(home) > 12)
     }
     //all pieces mapped to rectangular coordinates
-    to_rect(side = 0) {
+    to_rect(view = 0) {
         let pieces_rect = new Map()
-        for (const color of this.pieces.keys()) {
-            pieces_rect.set(color, this.pieces.get(color).map(tile => tile.to_rect(side)));
+        for (const side of this.pieces.keys()) {
+            pieces_rect.set(this.color.get(side), this.pieces.get(side).map(tile => tile.to_rect(view)));
         }
         return pieces_rect
     }
