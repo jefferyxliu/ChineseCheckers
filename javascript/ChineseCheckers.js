@@ -220,7 +220,3 @@ class ChineseCheckers {
         return pieces_rect
     }
 }
-
-C = new ChineseCheckers()
-C.set_up(6)
-console.log(C.to_rect())
