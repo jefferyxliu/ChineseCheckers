@@ -1,4 +1,4 @@
-export class Tile {
+class Tile {
     constructor(x, y, z) {
         //hexagonal coordinate system
         //lattice points of plane x + y + z = 0
@@ -46,7 +46,7 @@ export class Tile {
     }
 }
 
-export class TileSet {
+class TileSet {
     constructor(tiles = null) {
         if (tiles === null) {
             tiles = []
@@ -80,11 +80,10 @@ export class TileSet {
         return new TileSet([...this.map.values()])
     }
     includes(tile) {
-        return this.map.has(tile.toString)
+        return this.map.has(tile.toString())
     }
 }
-
-export default class ChineseCheckers {
+class ChineseCheckers {
     constructor() {
         //Map of all pieces and tile locations, index 0-5 as key
         this.pieces = new Map()
@@ -130,8 +129,8 @@ export default class ChineseCheckers {
         return new Tile(x, y, -x-y);
     }
     reset() {
-        this.pieces.clear;
-        this.home.clear;
+        this.pieces.clear();
+        this.color.clear();
         this.isPlaying = false;
     }
     //boundary is intersection of two equilateral triangles
@@ -205,7 +204,7 @@ export default class ChineseCheckers {
     //win condition
     has_won(side) {
         const home = this.home_tile(side)
-        return this.pieces.get(side).every(piece => piece.distance(home) > 12)
+        return this.pieces.get(side).every(piece => piece.dist(home) > 12)
     }
     //all pieces mapped to rectangular coordinates
     to_rect(view = 0) {
@@ -216,3 +215,5 @@ export default class ChineseCheckers {
         return pieces_rect
     }
 }
+//export default ChineseCheckers
+//export {Tile, TileSet}
