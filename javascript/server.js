@@ -158,7 +158,6 @@ class ChineseCheckers {
                 if (loc.equals(tiles[i])) {
                     tiles[i] = dest;
                     this.pieces.set(side, tiles);
-                    console.log('move successful');
                 }
             }
         }
@@ -237,6 +236,7 @@ io.on('connection', socket => {
         users[socket.id] = name;
         console.log(`${name} joined.`);
         socket.broadcast.emit('user-connected', name);
+        io.sockets.emit('board', CC.to_rect());
     })
     
     //when server receives message, send chat message to all clients
@@ -258,13 +258,11 @@ io.on('connection', socket => {
     socket.on('set_up', parameters => {
         try {
             CC.set_up(...parameters);
-            socket.emit('command', `${users[socket.id]} set up a game for ${parameters[0]} people.`);
-            const board = CC.to_rect();
-            console.log(board);
-            socket.emit('board', board);
+            io.sockets.emit('command', `${users[socket.id]} set up a game for ${parameters[0]} people.`);
+            io.sockets.emit('board', CC.to_rect());
             console.log(`${users[socket.id]} set up a game for ${parameters[0]} people.`);
         } catch (error) {
-            socket.broadcast.to(socket.id).emit('command', 'Error: set up failed.');
+            socket.emit('command', 'Error: set up failed.');
             console.log('error1');
         }
     })
@@ -272,8 +270,8 @@ io.on('connection', socket => {
     //command: 'reset'
     socket.on('reset', () => {
         CC.reset();
-        socket.emit('command', `${users[socket.id]} reset the board.`);
-        socket.emit('board', CC.to_rect());
+        io.sockets.emit('command', `${users[socket.id]} reset the board.`);
+        io.sockets.emit('board', CC.to_rect());
         console.log(`${users[socket.id]} reset the board.`);
     })
 
@@ -285,15 +283,15 @@ io.on('connection', socket => {
             const dest = new Tile(...parameters[1]);
             const legal = CC.is_legal(loc, dest);
             if (legal[0]) {
-                socket.broadcast.to(socket.id).emit('command', `Legal ${legal[1]} move.`);
+                socket.emit('command', `Legal ${legal[1]} move.`);
                 console.log(`Legal ${legal[1]} move.`)
             } else {
-                socket.broadcast.to(socket.id).emit('command', `Illegal move, ${legal[1]}.`);
+                socket.emit('command', `Illegal move, ${legal[1]}.`);
                 console.log(`Illegal move, ${legal[1]}.`);
             }
             
         } catch (error) {
-            socket.broadcast.to(socket.id).emit('command', 'Error, move could not be recognized.');
+            socket.emit('command', 'Error, move could not be recognized.');
             console.log('error2');
         }
     })
@@ -307,15 +305,15 @@ io.on('connection', socket => {
             const legal = CC.is_legal(loc, dest);
             if (legal[0]) {
                 CC.move(loc, dest);
-                socket.emit('command', `${users[socket.id]} moved ${loc.toString()} to ${dest.toString()}.`);
-                socket.emit('board', CC.to_rect());
+                io.sockets.emit('command', `${users[socket.id]} moved ${loc.toString()} to ${dest.toString()}.`);
+                io.sockets.emit('board', CC.to_rect());
                 console.log(`${users[socket.id]} moved ${loc.toString()} to ${dest.toString()}.`)
             } else {
-                socket.broadcast.to(socket.id).emit('command', `Illegal move, ${legal[1]}.`);
+                socket.emit('command', `Illegal move, ${legal[1]}.`);
                 console.log(`Illegal move, ${legal[1]}.`);
             }
         } catch (error) {
-            socket.broadcast.to(socket.id).emit('command', 'Error, move could not be recognized.');
+            socket.emit('command', 'Error, move could not be recognized.');
             console.log('error3');
         }
     })
