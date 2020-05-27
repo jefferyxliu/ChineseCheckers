@@ -1,3 +1,4 @@
+// Three Classes for the game algorithm; Tile, Tileset, ChineseCheckers
 class Tile {
     constructor(x, y, z) {
         //hexagonal coordinate system
@@ -171,10 +172,10 @@ class ChineseCheckers {
             for (const x of newtiles.copy().values()) {
                 for (const direction of this.directions) {
                     let jump = x.add(direction.mult(2));
-                    console.log(jump.toString())
+                    //console.log(jump.toString())
                     if (this.is_occupied(x.add(direction)) && this.in_bounds(jump) && this.is_empty(jump)) {
                         newtiles.add(jump);
-                        console.log('added')                      
+                        //console.log('added')                      
                     }
                 }
             }
@@ -218,3 +219,104 @@ class ChineseCheckers {
         return Object.fromEntries(pieces_rect.entries())
     }
 }
+
+//Socket Server-side Programming
+const PORT = 3001;
+const io = require('socket.io')(PORT);
+let CC = new ChineseCheckers();
+//object to track clients
+const users = {};
+
+//When a socket connects to the server
+io.on('connection', socket => {
+    
+    console.log(`new connection from ${socket.id}`);
+    
+    //when username is entered, track name in users, send user-connected message to all clients
+    socket.on('new-user', name => {
+        users[socket.id] = name;
+        console.log(`${name} joined.`);
+        socket.broadcast.emit('user-connected', name);
+    })
+    
+    //when server receives message, send chat message to all clients
+    socket.on('send-chat-message', message => {
+        console.log(`message from ${users[socket.id]}: ${message}`);
+        socket.broadcast.emit('chat-message', {message: message, name: users[socket.id]});
+    })
+    
+    //when client disconnects, send user-disconnect message to all clients
+    socket.on('disconnect', () => {
+        socket.broadcast.emit('user-disconnected', users[socket.id]);
+        console.log(`${users[socket.id]} left.`);
+        delete users[socket.id];
+    })
+
+    //when server receives command
+    //command: 'set_up'
+    //parameters: [gamemode, [colors0-5]]
+    socket.on('set_up', parameters => {
+        try {
+            CC.set_up(...parameters);
+            socket.emit('command', `${users[socket.id]} set up a game for ${parameters[0]} people.`);
+            const board = CC.to_rect();
+            console.log(board);
+            socket.emit('board', board);
+            console.log(`${users[socket.id]} set up a game for ${parameters[0]} people.`);
+        } catch (error) {
+            socket.broadcast.to(socket.id).emit('command', 'Error: set up failed.');
+            console.log('error1');
+        }
+    })
+
+    //command: 'reset'
+    socket.on('reset', () => {
+        CC.reset();
+        socket.emit('command', `${users[socket.id]} reset the board.`);
+        socket.emit('board', CC.to_rect());
+        console.log(`${users[socket.id]} reset the board.`);
+    })
+
+    //command: 'is_legal'
+    //parameters: [[x1,y1,z1],[x2,y2,z2]]
+    socket.on('is_legal', parameters => {
+        try {
+            const loc = new Tile(...parameters[0]);
+            const dest = new Tile(...parameters[1]);
+            const legal = CC.is_legal(loc, dest);
+            if (legal[0]) {
+                socket.broadcast.to(socket.id).emit('command', `Legal ${legal[1]} move.`);
+                console.log(`Legal ${legal[1]} move.`)
+            } else {
+                socket.broadcast.to(socket.id).emit('command', `Illegal move, ${legal[1]}.`);
+                console.log(`Illegal move, ${legal[1]}.`);
+            }
+            
+        } catch (error) {
+            socket.broadcast.to(socket.id).emit('command', 'Error, move could not be recognized.');
+            console.log('error2');
+        }
+    })
+
+    //command: 'move'
+    //parameters: [[x1,y1,z1],[x2,y2,z2]]
+    socket.on('move', parameters => {
+        try {
+            const loc = new Tile(...parameters[0]);
+            const dest = new Tile(...parameters[1]);
+            const legal = CC.is_legal(loc, dest);
+            if (legal[0]) {
+                CC.move(loc, dest);
+                socket.emit('command', `${users[socket.id]} moved ${loc.toString()} to ${dest.toString()}.`);
+                socket.emit('board', CC.to_rect());
+                console.log(`${users[socket.id]} moved ${loc.toString()} to ${dest.toString()}.`)
+            } else {
+                socket.broadcast.to(socket.id).emit('command', `Illegal move, ${legal[1]}.`);
+                console.log(`Illegal move, ${legal[1]}.`);
+            }
+        } catch (error) {
+            socket.broadcast.to(socket.id).emit('command', 'Error, move could not be recognized.');
+            console.log('error3');
+        }
+    })
+})

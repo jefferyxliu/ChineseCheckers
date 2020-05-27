@@ -1,8 +1,9 @@
 //const PORT = 3000
-const socket = io(`http://localhost:3000`)
+const socket = io(`http://localhost:3001`)
 
 const name = prompt('Enter username: ')
 socket.emit('new-user', name)
+console.log(`${name} joined.`)
 
 //receiving new connection message
 socket.on('user-connected', name => {
@@ -20,6 +21,7 @@ socket.on('chat-message', data => {
 //TO DO: get message from HTML text form
 function send_message(message = 'sample message') {
     socket.emit('send-chat-message', message)
+    console.log(`${name}: ${message}`)
 }
 
 //receiving disconnection message
@@ -29,25 +31,28 @@ socket.on('user-disconnected', name => {
 })
 
 //sending a game command
-//TO DO: get command from HTML text form (commands with special character "/")
-//send command as object {function: function, parameters: parameters}
+//TO DO: get command from HTML text form (commands with special character "/"
 //list of commands implemented:
-//{function: 'set_up', parameters: [gamemode, [colors0-5](optional colors)]}
-//{function: 'reset', parameters: null}
-//{function: 'is_legal', parameters: [[x1,y1,z1],[x2,y2,z2]]}
-//{function: 'move', parameters: [[x1,y1,z1],[x2,y2,z2]]}
-function send_command(command) {
-    socket.emit('send-command', command)
+//function: 'set_up', parameters: [gamemode, [colors0-5](optional colors)]
+//function: 'reset', parameters: null
+//function: 'is_legal', parameters: [[x1,y1,z1],[x2,y2,z2]]
+//function: 'move', parameters: [[x1,y1,z1],[x2,y2,z2]]
+function send_command(command, parameters) {
+    socket.emit(command, parameters)
 }
 
-//receiving a result of command
-socket.on('command', data => {
-    console.log(`${data.message}`)
+//receiving command output
+socket.on('command', message => {
+    console.log(`${message}`)
     //TO DO: print to HTML textbox instead
 })
 
 //receiving a board position of all pieces (a Map of {'color' => [[x1,y1],[x2,y2],...]})
 socket.on('board', position => {
     console.log(position)
+    //for (const color of position.keys()) {
+        //console.log(color);
+        //console.log(position.get(color))
+    //}
     //TO DO: display board position on HTML canvas. Remember to multiply y coordinate by sqrt(3) ~1.73
 })
