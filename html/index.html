@@ -7,10 +7,50 @@
     <meta name="description" content="homepage">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <title>ChineseCheckers</title>
+    <style>
+      .canvasframe {
+        float: left;
+        width: 620px;
+      }
+      .chatframe {
+        float: left;
+        width: 350px;
+      }
+      .row:after {
+        content: "";
+        display: table;
+        clear: both;
+      }
+    </style>
 </head>
 <body>
-<p>Check the console</p>
-<canvas id="canvas" width="600" height="600" style="border:1px solid #000000;"></canvas>
+  <div class='row'>
+    <div class="canvasframe">
+      <canvas id="canvas" width="600" height="600" style="border:1px solid #000000;"></canvas>
+      <form>
+        <input id="startbutton" type="button" value="New Game"></input>
+        <label> for </label>
+        <select id = "numplayers" name="number">
+          <option value='2'>2</option>
+          <option value='3'>3</option>
+          <option value='4'>4</option>
+          <option value='5'>5</option>
+          <option value='6'>6</option>
+        </select>
+        <label> players</label>
+      </form>
+    </div>
+    <div class="chatframe">
+      <form>
+        <label>Participants</label><br>
+        <textarea id="participants" rows="10" cols="50" disabled></textarea><br>
+        <label>Chat</label><br>
+        <textarea id="chatbox" rows="31" cols="50" disabled></textarea><br>
+        <input type="text" id="text" size="43"></input>
+        <input id="returnbutton" type="button" value="Return"></input><br>
+      </form>
+    </div>
+  </div>
 <script src = "../node_modules/socket.io-client/dist/socket.io.js"></script>
 <script src = "../javascript/script.js"></script>
 </body>

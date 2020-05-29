@@ -29,14 +29,14 @@ function draw_pieces(position) {
     }
 }
 var loadmove
-canvas.addEventListener('mousedown', e => {
-    const x = e.offsetX - 300;
-    const y = e.offsetY - 300;
+canvas.addEventListener('mousedown', event => {
+    const x = event.offsetX - 300;
+    const y = event.offsetY - 300;
     loadmove = [Math.round(x / 40 + y / 40 / 1.73), Math.round(-x / 40 + y / 40 / 1.73)]
 })
-canvas.addEventListener('mouseup', e => {
-    const x = e.offsetX - 300;
-    const y = e.offsetY - 300;
+canvas.addEventListener('mouseup', event => {
+    const x = event.offsetX - 300;
+    const y = event.offsetY - 300;
     const sendmove = [Math.round(x / 40 + y / 40 / 1.73), Math.round(-x / 40 + y / 40 / 1.73)]
     if (loadmove !== sendmove) {
         send_command('move', [[loadmove[0],loadmove[1],-loadmove[0]-loadmove[1]],[sendmove[0],sendmove[1],-sendmove[0]-sendmove[1]]])
@@ -44,34 +44,59 @@ canvas.addEventListener('mouseup', e => {
     loadmove = undefined
 })
 
+//HTML chatbox and textbox and return button
+let chatbox = document.getElementById('chatbox');
+let text = document.getElementById('text');
+let returnbutton = document.getElementById('returnbutton');
+returnbutton.addEventListener('click', event => {
+    send_message(text.value);
+    text.value = '';
+})
+
+text.addEventListener('keypress', event => {
+    if (event.keyCode === 13) {
+        event.preventDefault();
+        send_message(text.value);
+        text.value = '';
+    }
+})
+
+//HTML Game Settings Buttons
+let startbutton = document.getElementById('startbutton');
+startbutton.addEventListener('click', event => {
+    n = document.getElementById('numplayers').value
+    send_command('set_up',[n]);
+})
 
 const name = prompt('Enter username: ')
 socket.emit('new-user', name)
 console.log(`${name} joined.`)
+chatbox.value += `${name} joined.\n`;
 
 //receiving new connection message
 socket.on('user-connected', name => {
-    console.log(`${name} joined.`)
-    //TO DO: print to HTML chatbox instead
+    console.log(`${name} joined.`);
+    chatbox.value += `${name} joined.\n`;
 })
 
 //receiving a chat-message
 socket.on('chat-message', data => {
-    console.log(`${data.name}: ${data.message}`)
-    //TO DO: print to HTML textbox instead
+    console.log(`${data.name}: ${data.message}`);
+    chatbox.value += `${data.name}: ${data.message}\n`
 })
 
 //sending a chat-message
 //TO DO: get message from HTML text form
 function send_message(message = 'sample message') {
-    socket.emit('send-chat-message', message)
-    console.log(`${name}: ${message}`)
+    socket.emit('send-chat-message', message);
+    console.log(`${name}: ${message}`);
+    chatbox.value += `${name}: ${message}\n`
 }
 
 //receiving disconnection message
 socket.on('user-disconnected', name => {
     console.log(`${name} left.`);
-    //TO DO: print to HTML chatbox instead
+    chatbox.value += `${name} left.\n`
 })
 
 //sending a game command
@@ -88,7 +113,7 @@ function send_command(command, parameters) {
 //receiving command output
 socket.on('command', message => {
     console.log(`${message}`);
-    //TO DO: print to HTML textbox instead
+    chatbox.value += `${message}\n`
 })
 
 //receiving a board position of all pieces (an object {'color': [[x1,y1],[x2,y2],...]})
