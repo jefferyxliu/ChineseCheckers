@@ -1,6 +1,5 @@
-//const PORT = 3000
 const socket = io(`http://localhost:3001`)
-
+//HTML elements and eventbindings:
 //HTML canvas
 let canvas = document.getElementById("canvas");
 let ctx = canvas.getContext("2d");
@@ -61,12 +60,17 @@ text.addEventListener('keypress', event => {
     }
 })
 
+//HTML participants box
+let participantsbox = document.getElementById('participants')
+
 //HTML Game Settings Buttons
 let startbutton = document.getElementById('startbutton');
 startbutton.addEventListener('click', event => {
     n = document.getElementById('numplayers').value
     send_command('set_up',[n]);
 })
+
+//socket client programming
 
 const name = prompt('Enter username: ')
 socket.emit('new-user', name)
@@ -86,7 +90,6 @@ socket.on('chat-message', data => {
 })
 
 //sending a chat-message
-//TO DO: get message from HTML text form
 function send_message(message = 'sample message') {
     socket.emit('send-chat-message', message);
     console.log(`${name}: ${message}`);
@@ -100,7 +103,6 @@ socket.on('user-disconnected', name => {
 })
 
 //sending a game command
-//TO DO: get command from HTML text form (commands with special character "/"
 //list of commands implemented:
 //function: 'set_up', parameters: [gamemode, [colors0-5](optional colors)]
 //function: 'reset', parameters: null
@@ -122,4 +124,9 @@ socket.on('board', position => {
     ctx.clearRect(0,0,600,600);
     draw_spaces();
     draw_pieces(position);
+})
+
+//recieving a list of participants
+socket.on('participants', participants => {
+    participantsbox.value = participants.join('\n');
 })
