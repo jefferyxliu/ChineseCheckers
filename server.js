@@ -221,13 +221,15 @@ class ChineseCheckers {
 
 //web app with express
 const PORT = 3001;
-const express = require("express");
+const express = require('express');
 const app = express();
 const server = app.listen(PORT);
 
-app.use(express.static("public"));
+app.use(express.static('public'));
 
 //socket server-side programming with socket.io
+console.log('Running server.js ...');
+
 const io = require('socket.io')(server);
 let CC = new ChineseCheckers();
 
