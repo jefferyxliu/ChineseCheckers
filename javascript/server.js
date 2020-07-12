@@ -219,14 +219,22 @@ class ChineseCheckers {
     }
 }
 
-//Socket Server-side Programming
+//web app with express
 const PORT = 3001;
-const io = require('socket.io')(PORT);
+const express = require("express");
+const app = express();
+const server = app.listen(PORT);
+
+app.use(express.static("public"));
+
+//socket server-side programming with socket.io
+const io = require('socket.io')(server);
 let CC = new ChineseCheckers();
+
 //object to track clients
 const users = {};
 
-//When a socket connects to the server
+//when a socket connects to the server
 io.on('connection', socket => {
     
     console.log(`new connection from ${socket.id}`);
