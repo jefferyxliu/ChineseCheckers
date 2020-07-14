@@ -38,16 +38,15 @@ canvas.addEventListener('mouseup', event => {
     const y = event.offsetY - 300;
     const sendmove = [Math.round(x / 40 + y / 40 / 1.73), Math.round(-x / 40 + y / 40 / 1.73)]
     if (loadmove !== sendmove) {
-        send_command('move', [[loadmove[0],loadmove[1],-loadmove[0]-loadmove[1]],[sendmove[0],sendmove[1],-sendmove[0]-sendmove[1]]])
+        send_command('move', [loadmove, sendmove])
     }
     loadmove = undefined
 })
 
 //HTML chatbox and textbox and return button
-let chatbox = document.getElementById('chatbox');
-let text = document.getElementById('text');
-let returnbutton = document.getElementById('returnbutton');
-returnbutton.addEventListener('click', event => {
+const chatbox = document.getElementById('chatbox');
+const text = document.getElementById('text');
+document.getElementById('returnbutton').addEventListener('click', event => {
     send_message(text.value);
     text.value = '';
 })
@@ -61,15 +60,21 @@ text.addEventListener('keypress', event => {
 })
 
 //HTML participants box
-let participantsbox = document.getElementById('participants')
+const participantsbox = document.getElementById('participants')
 
 //HTML Game Settings Buttons
-let startbutton = document.getElementById('startbutton');
-startbutton.addEventListener('click', event => {
+document.getElementById('startbutton').addEventListener('click', event => {
     n = document.getElementById('numplayers').value
     send_command('set_up',[n]);
 })
 
+document.getElementById('left').addEventListener('click', event => {
+    send_command('rotate', 5);
+})
+
+document.getElementById('right').addEventListener('click', event => {
+    send_command('rotate', 1);
+})
 //socket client programming
 
 const name = prompt('Enter username: ')
@@ -98,8 +103,8 @@ function send_message(message = 'sample message') {
 
 //receiving disconnection message
 socket.on('user-disconnected', name => {
-    console.log(`${name} left.`);
-    chatbox.value += `${name} left.\n`
+    console.log(`${name.name} left.`);
+    chatbox.value += `${name.name} left.\n`
 })
 
 //sending a game command

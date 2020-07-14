@@ -236,6 +236,15 @@ let CC = new ChineseCheckers();
 //object to track clients
 const users = {};
 
+function emit_board() {
+    for (const id in users) {
+        io.to(id).emit('board', CC.to_rect(users[id].side))
+    }
+}
+function emit_participants() {
+    io.sockets.emit('participants', Object.values(users).map(user => CC.color.has(user.side) ? `${user.name} (${CC.color.get(user.side)})` : user.name));
+}
+
 //when a socket connects to the server
 io.on('connection', socket => {
     
@@ -243,25 +252,25 @@ io.on('connection', socket => {
     
     //when username is entered, track name in users, send user-connected message to all clients, update participants box
     socket.on('new-user', name => {
-        users[socket.id] = name;
+        users[socket.id] = {name: name, side: 0};
         console.log(`${name} joined.`);
         socket.broadcast.emit('user-connected', name);
-        io.sockets.emit('board', CC.to_rect());
-        io.sockets.emit('participants', Object.values(users))
+        socket.emit('board', CC.to_rect(users[socket.id].side));
+        emit_participants();
     })
     
     //when server receives message, send chat message to all clients
     socket.on('send-chat-message', message => {
-        console.log(`message from ${users[socket.id]}: ${message}`);
-        socket.broadcast.emit('chat-message', {message: message, name: users[socket.id]});
+        console.log(`message from ${users[socket.id].name}: ${message}`);
+        socket.broadcast.emit('chat-message', {message: message, name: users[socket.id].name});
     })
     
     //when client disconnects, send user-disconnect message to all clients, update participants box
     socket.on('disconnect', () => {
         socket.broadcast.emit('user-disconnected', users[socket.id]);
-        console.log(`${users[socket.id]} left.`);
+        console.log(`${users[socket.id].name} left.`);
         delete users[socket.id];
-        io.sockets.emit('participants', Object.values(users))
+        emit_participants();
     })
 
     //when server receives command
@@ -270,9 +279,10 @@ io.on('connection', socket => {
     socket.on('set_up', parameters => {
         try {
             CC.set_up(...parameters);
-            io.sockets.emit('command', `${users[socket.id]} set up a game for ${parameters[0]} people.`);
-            io.sockets.emit('board', CC.to_rect());
-            console.log(`${users[socket.id]} set up a game for ${parameters[0]} people.`);
+            io.sockets.emit('command', `${users[socket.id].name} set up a game for ${parameters[0]} people.`);
+            emit_board();
+            emit_participants();
+            console.log(`${users[socket.id].name} set up a game for ${parameters[0]} people.`);
         } catch (error) {
             socket.emit('command', 'Error: set up failed.');
             console.log('error1');
@@ -282,9 +292,10 @@ io.on('connection', socket => {
     //command: 'reset'
     socket.on('reset', () => {
         CC.reset();
-        io.sockets.emit('command', `${users[socket.id]} reset the board.`);
-        io.sockets.emit('board', CC.to_rect());
-        console.log(`${users[socket.id]} reset the board.`);
+        io.sockets.emit('command', `${users[socket.id].name} reset the board.`);
+        emit_board();
+        emit_participants();
+        console.log(`${users[socket.id].name} reset the board.`);
     })
 
     //command: 'is_legal'
@@ -309,17 +320,25 @@ io.on('connection', socket => {
     })
 
     //command: 'move'
-    //parameters: [[x1,y1,z1],[x2,y2,z2]]
+    //parameters: [[x1,y1],[x2,y2]]
     socket.on('move', parameters => {
         try {
-            const loc = new Tile(...parameters[0]);
-            const dest = new Tile(...parameters[1]);
+            const i = users[socket.id].side
+            const c = [1,0,0,-1,0,0][i % 6];
+            const d = [1,0,0,-1,0,0][(i + 2) % 6];
+            const e = [1,0,0,-1,0,0][(i + 4) % 6];
+            const x0 = c * parameters[0][0] + d * parameters[0][1] + e * (- parameters[0][0] - parameters[0][1]);
+            const y0 = e * parameters[0][0] + c * parameters[0][1] + d * (- parameters[0][0] - parameters[0][1]);
+            const x1 = c * parameters[1][0] + d * parameters[1][1] + e * (- parameters[1][0] - parameters[1][1]);
+            const y1 = e * parameters[1][0] + c * parameters[1][1] + d * (- parameters[1][0] - parameters[1][1]);
+            const loc = new Tile(x0, y0, -x0-y0);
+            const dest = new Tile(x1, y1, -x1-y1);
             const legal = CC.is_legal(loc, dest);
             if (legal[0]) {
                 CC.move(loc, dest);
-                io.sockets.emit('command', `${users[socket.id]} moved ${loc.toString()} to ${dest.toString()}.`);
-                io.sockets.emit('board', CC.to_rect());
-                console.log(`${users[socket.id]} moved ${loc.toString()} to ${dest.toString()}.`)
+                io.sockets.emit('command', `${users[socket.id].name} moved ${loc.toString()} to ${dest.toString()}.`);
+                emit_board();
+                console.log(`${users[socket.id].name} moved ${loc.toString()} to ${dest.toString()}.`)
             } else {
                 socket.emit('command', `Illegal move, ${legal[1]}.`);
                 console.log(`Illegal move, ${legal[1]}.`);
@@ -328,5 +347,11 @@ io.on('connection', socket => {
             socket.emit('command', 'Error, move could not be recognized.');
             console.log('error3');
         }
+    })
+
+    socket.on('rotate', direction => {
+        users[socket.id].side = (users[socket.id].side + direction) % 6
+        emit_board()
+        emit_participants()
     })
 })
