@@ -1,4 +1,4 @@
-const socket = io(`http://localhost:3001`)
+const socket = io(`http://18.217.107.58:3001`)
 //HTML elements and eventbindings:
 //HTML canvas
 let canvas = document.getElementById("canvas");
@@ -69,11 +69,11 @@ document.getElementById('startbutton').addEventListener('click', event => {
 })
 
 document.getElementById('left').addEventListener('click', event => {
-    send_command('rotate', 5);
+    send_command('rotate', 1);
 })
 
 document.getElementById('right').addEventListener('click', event => {
-    send_command('rotate', 1);
+    send_command('rotate', 5);
 })
 //socket client programming
 
