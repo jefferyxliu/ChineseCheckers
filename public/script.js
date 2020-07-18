@@ -42,6 +42,14 @@ canvas.addEventListener('mouseup', event => {
     }
     loadmove = undefined
 })
+canvas.addEventListener('touchstart', event => {
+    event.preventDefault()
+    document.dispatchEvent(new MouseEvent('mousedown', {'offsetX': event.offsetX, 'offsetY': event.offsetY}))
+})
+canvas.addEventListener('touchend', event => {
+    event.preventDefault()
+    document.dispatchEvent(new MouseEvent('mouseup', {'offsetX': event.offsetX, 'offsetY': event.offsetY}))
+})
 
 //HTML chatbox and textbox and return button
 const chatbox = document.getElementById('chatbox');
