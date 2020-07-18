@@ -44,6 +44,7 @@ canvas.addEventListener('mouseup', event => {
 })
 canvas.addEventListener('touchstart', event => {
     event.preventDefault();
+    alert('You touched me!');
     const touchobj = event.changedTouches[0];
     document.dispatchEvent(new MouseEvent('mousedown', {'clientX': touchobj.clientX, 'clientY': touchobj.clientY, 'screenX': touchobj.screenX, 'screenY': touchobj.screenY}));
 })
