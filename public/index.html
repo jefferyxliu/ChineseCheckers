@@ -14,6 +14,20 @@
         margin: 5px;
         padding: 5px;
       }
+
+      #canvas {
+        width: 600px;
+        height: 600px;
+        border: 1pt solid black;
+      }
+      #options {
+        text-align: center;
+        border:1px solid #000000;
+        width: 600px;
+        padding-top: 5px;
+        padding-bottom: 5px;
+      }
+
       .chatframe {
         float: left;
         width: 320px;
@@ -21,6 +35,25 @@
         padding: 5px;
         text-align: center;
       }
+
+      #participants {
+        width: 310px;
+        height: 150px;
+      }
+
+      #chatbox {
+        width: 310px;
+        height: 450px;
+      }
+
+      #text {
+        width: 250px;
+      }
+
+      #returnbutton {
+        width: 55px;
+      }
+
       .row:after {
         content: "";
         display: table;
@@ -31,9 +64,9 @@
 <body>
   <div class='row'>
     <div class="canvasframe">
-      <canvas id="canvas" width="600" height="600" style="border:1px solid #000000;"></canvas>
+      <canvas id="canvas"></canvas>
       <form>
-        <div style="text-align: center; border:1px solid #000000; width: 600px; padding-top: 5px; padding-bottom: 5px;">
+        <div id="options" style="">
           <input id="left" type="button" value="&#8592;"></input>
           <label> Rotate Board </label>
           <input id="right" type="button" value="&#8594;"></input>
@@ -54,11 +87,11 @@
     <div class="chatframe">
       <form>
         <label>Participants</label><br>
-        <textarea id="participants" style="width: 310px; height: 150px;" disabled></textarea><br>
+        <textarea id="participants" disabled></textarea><br>
         <label>Chat</label><br>
-        <textarea id="chatbox" style="width: 310px; height: 450px;" disabled></textarea><br>
-        <input type="text" id="text" style="width: 250px;"></input>
-        <input id="returnbutton" type="button" style="width: 55px;" value="Return"></input><br>
+        <textarea id="chatbox" disabled></textarea><br>
+        <input type="text" id="text"></input>
+        <input id="returnbutton" type="button" value="Return"></input><br>
       </form>
     </div>
   </div>
