@@ -44,11 +44,11 @@ canvas.addEventListener('mouseup', event => {
 })
 canvas.addEventListener('touchstart', event => {
     event.preventDefault()
-    document.dispatchEvent(new MouseEvent('mousedown', {'offsetX': event.offsetX, 'offsetY': event.offsetY}))
+    document.dispatchEvent(new MouseEvent('mousedown', {'offsetX': event.offsetX, 'offsetY': event.offsetY, 'screenX': event.screenX, 'screenY': event.screenY}))
 })
 canvas.addEventListener('touchend', event => {
     event.preventDefault()
-    document.dispatchEvent(new MouseEvent('mouseup', {'offsetX': event.offsetX, 'offsetY': event.offsetY}))
+    document.dispatchEvent(new MouseEvent('mouseup', {'offsetX': event.offsetX, 'offsetY': event.offsetY, 'screenX': event.screenX, 'screenY': event.screenY}))
 })
 
 //HTML chatbox and textbox and return button
