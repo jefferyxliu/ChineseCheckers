@@ -43,12 +43,14 @@ canvas.addEventListener('mouseup', event => {
     loadmove = undefined
 })
 canvas.addEventListener('touchstart', event => {
-    event.preventDefault()
-    document.dispatchEvent(new MouseEvent('mousedown', {'offsetX': event.offsetX, 'offsetY': event.offsetY, 'screenX': event.screenX, 'screenY': event.screenY}))
+    event.preventDefault();
+    const touchobj = event.changedTouches[0];
+    document.dispatchEvent(new MouseEvent('mousedown', {'clientX': touchobj.clientX, 'clientY': touchobj.clientY, 'screenX': touchobj.screenX, 'screenY': touchobj.screenY}));
 })
 canvas.addEventListener('touchend', event => {
-    event.preventDefault()
-    document.dispatchEvent(new MouseEvent('mouseup', {'offsetX': event.offsetX, 'offsetY': event.offsetY, 'screenX': event.screenX, 'screenY': event.screenY}))
+    event.preventDefault();
+    const touchobj = event.changedTouches[0];
+    document.dispatchEvent(new MouseEvent('mouseup', {'clientX': touchobj.clientX, 'clientY': touchobj.clientY, 'screenX': touchobj.screenX, 'screenY': touchobj.screenY}));
 })
 
 //HTML chatbox and textbox and return button
